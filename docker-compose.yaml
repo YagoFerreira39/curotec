@@ -1,0 +1,38 @@
+services:
+  curotec-postgres:
+    image: postgres:latest
+    container_name: curotec-postgres
+    volumes:
+      - postgres_data_container:/var/lib/postgresql/data
+      - ./docker-entrypoint-initdb.d/postgres-init.sql:/docker-entrypoint-initdb.d/postgres-init.sql:ro
+    environment:
+      POSTGRES_PASSWORD: "rootpassword"
+      POSTGRES_USER: "postgres"
+      POSTGRES_DB: "curotec"
+    ports:
+      - "5435:5432"
+    networks:
+      - curotec_network
+  curotec:
+    build:
+      context: .
+    environment:
+      SERVER_HOST: '0.0.0.0'
+      SERVER_PORT: 8000
+      LOG_LEVEL: 10
+      CORS_ALLOWED_ORIGINS: "http://localhost:80,http://localhost:8080,http://localhost:4000"
+      POSTGRESQL_STRING_CONNECTION: "postgresql://postgres:rootpassword@curotec-postgres"
+      POSTGRESQL_DATABASE: "curotec"
+      ROOT_PATH: "/api-curotec"
+    ports:
+      - "8000:8000"
+    networks:
+        - curotec_network
+
+volumes:
+  postgres_data_container:
+    name: "postgres_data_container"
+
+networks:
+  curotec_network:
+    driver: bridge
